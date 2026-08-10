@@ -1,0 +1,12 @@
+{
+  "name": "dagemawi-developer/wp-integration-toolkit",
+  "description": "Production-style WordPress webhook and API integration reference plugin.",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "php": ">=7.4"
+  },
+  "scripts": {
+    "lint": "find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l"
+  }
+}
