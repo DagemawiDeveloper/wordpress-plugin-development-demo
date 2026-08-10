@@ -1,0 +1,15 @@
+.wpitk-wrap { max-width: 1280px; }
+.wpitk-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); gap: 20px; margin-top: 20px; }
+.wpitk-card { background: #fff; border: 1px solid #dcdcde; border-radius: 8px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.wpitk-card h2 { margin-top: 0; }
+.wpitk-card code { word-break: break-word; }
+.wpitk-logs-card { margin-top: 20px; }
+.wpitk-table-scroll { overflow-x: auto; }
+#wpitk-test-result { display: inline-block; margin-left: 10px; font-weight: 600; }
+#wpitk-test-result.is-success { color: #008a20; }
+#wpitk-test-result.is-error { color: #b32d2e; }
+.wpitk-status { display: inline-flex; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #f0f0f1; }
+.wpitk-status-delivered, .wpitk-status-accepted { background: #edfaef; color: #006b1b; }
+.wpitk-status-failed, .wpitk-status-rejected { background: #fcf0f1; color: #8a2424; }
+.wpitk-status-sending, .wpitk-status-retrying { background: #f0f6fc; color: #135e96; }
+@media (max-width: 900px) { .wpitk-grid { grid-template-columns: 1fr; } }
