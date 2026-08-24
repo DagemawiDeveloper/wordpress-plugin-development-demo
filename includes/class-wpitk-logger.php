@@ -14,6 +14,7 @@ class WPITK_Logger {
         $row = wp_parse_args(
             $data,
             array(
+                'delivery_id'   => null,
                 'direction'     => 'outbound',
                 'event_name'    => 'unknown',
                 'endpoint'      => '',
@@ -27,8 +28,15 @@ class WPITK_Logger {
             )
         );
 
-        $wpdb->insert( $table, $row );
-        return (int) $wpdb->insert_id;
+        if ( empty( $row['delivery_id'] ) ) {
+            $row['delivery_id'] = null;
+        } else {
+            $row['delivery_id'] = substr( sanitize_text_field( (string) $row['delivery_id'] ), 0, 128 );
+        }
+
+        $inserted = $wpdb->insert( $table, $row );
+
+        return false === $inserted ? 0 : (int) $wpdb->insert_id;
     }
 
     public function update( $id, array $data ) {

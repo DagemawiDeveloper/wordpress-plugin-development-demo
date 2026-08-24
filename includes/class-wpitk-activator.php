@@ -5,6 +5,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class WPITK_Activator {
+    public static function maybe_upgrade() {
+        if ( WPITK_VERSION !== get_option( 'wpitk_version' ) ) {
+            self::activate();
+        }
+    }
+
     public static function activate() {
         global $wpdb;
 
@@ -13,6 +19,7 @@ class WPITK_Activator {
 
         $sql = "CREATE TABLE {$table_name} (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            delivery_id VARCHAR(128) NULL,
             direction VARCHAR(20) NOT NULL,
             event_name VARCHAR(190) NOT NULL,
             endpoint TEXT NULL,
@@ -24,6 +31,7 @@ class WPITK_Activator {
             created_at DATETIME NOT NULL,
             updated_at DATETIME NOT NULL,
             PRIMARY KEY (id),
+            UNIQUE KEY delivery_id (delivery_id),
             KEY direction (direction),
             KEY status (status),
             KEY created_at (created_at)
@@ -39,6 +47,7 @@ class WPITK_Activator {
                     'outbound_url'             => '',
                     'webhook_secret'           => '',
                     'request_timeout'          => 10,
+                    'signature_tolerance'      => WPITK_Webhook_Auth::DEFAULT_TOLERANCE,
                     'remove_data_on_uninstall' => 0,
                 )
             );
