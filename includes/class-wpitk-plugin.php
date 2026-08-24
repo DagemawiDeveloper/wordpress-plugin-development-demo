@@ -7,8 +7,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPITK_Plugin {
     public function run() {
         $crypto   = new WPITK_Crypto();
+        $auth     = new WPITK_Webhook_Auth();
         $logger   = new WPITK_Logger();
-        $webhooks = new WPITK_Webhook_Service( $logger, $crypto );
+        $webhooks = new WPITK_Webhook_Service( $logger, $crypto, $auth );
         $rest     = new WPITK_REST_Controller( $logger, $webhooks );
         $admin    = new WPITK_Admin( $logger, $webhooks, $crypto );
 
