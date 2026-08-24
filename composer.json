@@ -6,7 +6,11 @@
   "require": {
     "php": ">=7.4"
   },
+  "require-dev": {
+    "phpunit/phpunit": "^9.6"
+  },
   "scripts": {
-    "lint": "find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l"
+    "lint": "find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l",
+    "test": "phpunit --configuration phpunit.xml.dist"
   }
 }
