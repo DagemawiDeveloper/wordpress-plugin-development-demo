@@ -44,16 +44,53 @@ class WPITK_Admin {
     }
 
     public function sanitize_settings( $input ) {
+        $input   = is_array( $input ) ? $input : array();
         $current = get_option( 'wpitk_settings', array() );
         $output  = array();
 
-        $output['outbound_url'] = isset( $input['outbound_url'] ) ? esc_url_raw( $input['outbound_url'] ) : '';
-        $output['request_timeout'] = isset( $input['request_timeout'] ) ? max( 1, min( 30, absint( $input['request_timeout'] ) ) ) : 10;
+        $submitted_url = isset( $input['outbound_url'] ) ? esc_url_raw( $input['outbound_url'] ) : '';
+
+        if ( '' !== $submitted_url && ! $this->is_allowed_endpoint( $submitted_url ) ) {
+            add_settings_error(
+                'wpitk_settings',
+                'wpitk_invalid_endpoint',
+                __( 'Outbound webhook URLs must be valid public HTTPS URLs.', 'wp-integration-toolkit' )
+            );
+            $output['outbound_url'] = isset( $current['outbound_url'] ) ? $current['outbound_url'] : '';
+        } else {
+            $output['outbound_url'] = $submitted_url;
+        }
+
+        $output['request_timeout'] = isset( $input['request_timeout'] )
+            ? max( 1, min( 30, absint( $input['request_timeout'] ) ) )
+            : 10;
+        $output['signature_tolerance'] = isset( $input['signature_tolerance'] )
+            ? max( 60, min( 900, absint( $input['signature_tolerance'] ) ) )
+            : WPITK_Webhook_Auth::DEFAULT_TOLERANCE;
         $output['remove_data_on_uninstall'] = ! empty( $input['remove_data_on_uninstall'] ) ? 1 : 0;
 
         $submitted_secret = isset( $input['webhook_secret'] ) ? trim( (string) $input['webhook_secret'] ) : '';
+
         if ( '' !== $submitted_secret ) {
-            $output['webhook_secret'] = $this->crypto->encrypt( sanitize_text_field( $submitted_secret ) );
+            if ( strlen( $submitted_secret ) < 32 ) {
+                add_settings_error(
+                    'wpitk_settings',
+                    'wpitk_weak_secret',
+                    __( 'Use a randomly generated signing secret of at least 32 characters.', 'wp-integration-toolkit' )
+                );
+                $output['webhook_secret'] = isset( $current['webhook_secret'] ) ? $current['webhook_secret'] : '';
+            } else {
+                try {
+                    $output['webhook_secret'] = $this->crypto->encrypt( $submitted_secret );
+                } catch ( RuntimeException $exception ) {
+                    add_settings_error(
+                        'wpitk_settings',
+                        'wpitk_crypto_unavailable',
+                        esc_html( $exception->getMessage() )
+                    );
+                    $output['webhook_secret'] = isset( $current['webhook_secret'] ) ? $current['webhook_secret'] : '';
+                }
+            }
         } else {
             $output['webhook_secret'] = isset( $current['webhook_secret'] ) ? $current['webhook_secret'] : '';
         }
@@ -72,10 +109,10 @@ class WPITK_Admin {
             'wpitk-admin',
             'wpitkAdmin',
             array(
-                'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-                'nonce'   => wp_create_nonce( 'wpitk_admin' ),
-                'testing' => __( 'Sending…', 'wp-integration-toolkit' ),
-                'retrying'=> __( 'Retrying…', 'wp-integration-toolkit' ),
+                'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+                'nonce'    => wp_create_nonce( 'wpitk_admin' ),
+                'testing'  => __( 'Sending…', 'wp-integration-toolkit' ),
+                'retrying' => __( 'Retrying…', 'wp-integration-toolkit' ),
             )
         );
     }
@@ -90,7 +127,9 @@ class WPITK_Admin {
         ?>
         <div class="wrap wpitk-wrap">
             <h1><?php esc_html_e( 'WP Integration Toolkit', 'wp-integration-toolkit' ); ?></h1>
-            <p class="description"><?php esc_html_e( 'Configure signed webhooks, test integrations, and inspect delivery history from one place.', 'wp-integration-toolkit' ); ?></p>
+            <p class="description"><?php esc_html_e( 'Configure authenticated webhooks, test integrations, and inspect delivery history from one place.', 'wp-integration-toolkit' ); ?></p>
+
+            <?php settings_errors( 'wpitk_settings' ); ?>
 
             <div class="wpitk-grid">
                 <section class="wpitk-card">
@@ -100,18 +139,28 @@ class WPITK_Admin {
                         <table class="form-table" role="presentation">
                             <tr>
                                 <th scope="row"><label for="wpitk-outbound-url"><?php esc_html_e( 'Outbound webhook URL', 'wp-integration-toolkit' ); ?></label></th>
-                                <td><input class="regular-text" type="url" id="wpitk-outbound-url" name="wpitk_settings[outbound_url]" value="<?php echo esc_attr( isset( $settings['outbound_url'] ) ? $settings['outbound_url'] : '' ); ?>" placeholder="https://example.com/webhooks/wordpress"></td>
+                                <td>
+                                    <input class="regular-text" type="url" id="wpitk-outbound-url" name="wpitk_settings[outbound_url]" value="<?php echo esc_attr( isset( $settings['outbound_url'] ) ? $settings['outbound_url'] : '' ); ?>" placeholder="https://example.com/webhooks/wordpress">
+                                    <p class="description"><?php esc_html_e( 'Only public HTTPS endpoints are accepted.', 'wp-integration-toolkit' ); ?></p>
+                                </td>
                             </tr>
                             <tr>
                                 <th scope="row"><label for="wpitk-secret"><?php esc_html_e( 'Signing secret', 'wp-integration-toolkit' ); ?></label></th>
                                 <td>
-                                    <input class="regular-text" type="password" id="wpitk-secret" name="wpitk_settings[webhook_secret]" value="" autocomplete="new-password" placeholder="••••••••••••">
-                                    <p class="description"><?php esc_html_e( 'Leave blank to keep the existing encrypted secret.', 'wp-integration-toolkit' ); ?></p>
+                                    <input class="regular-text" type="password" id="wpitk-secret" name="wpitk_settings[webhook_secret]" value="" autocomplete="new-password" placeholder="Minimum 32 random characters">
+                                    <p class="description"><?php esc_html_e( 'Leave blank to keep the existing encrypted secret. Secure storage requires OpenSSL and configured WordPress salts.', 'wp-integration-toolkit' ); ?></p>
                                 </td>
                             </tr>
                             <tr>
                                 <th scope="row"><label for="wpitk-timeout"><?php esc_html_e( 'Request timeout', 'wp-integration-toolkit' ); ?></label></th>
                                 <td><input type="number" min="1" max="30" id="wpitk-timeout" name="wpitk_settings[request_timeout]" value="<?php echo esc_attr( isset( $settings['request_timeout'] ) ? $settings['request_timeout'] : 10 ); ?>"> <?php esc_html_e( 'seconds', 'wp-integration-toolkit' ); ?></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="wpitk-signature-tolerance"><?php esc_html_e( 'Signature tolerance', 'wp-integration-toolkit' ); ?></label></th>
+                                <td>
+                                    <input type="number" min="60" max="900" id="wpitk-signature-tolerance" name="wpitk_settings[signature_tolerance]" value="<?php echo esc_attr( isset( $settings['signature_tolerance'] ) ? $settings['signature_tolerance'] : WPITK_Webhook_Auth::DEFAULT_TOLERANCE ); ?>"> <?php esc_html_e( 'seconds', 'wp-integration-toolkit' ); ?>
+                                    <p class="description"><?php esc_html_e( 'Inbound requests outside this clock window are rejected.', 'wp-integration-toolkit' ); ?></p>
+                                </td>
                             </tr>
                             <tr>
                                 <th scope="row"><?php esc_html_e( 'Uninstall cleanup', 'wp-integration-toolkit' ); ?></th>
@@ -127,7 +176,7 @@ class WPITK_Admin {
                 <section class="wpitk-card">
                     <h2><?php esc_html_e( 'Inbound Endpoint', 'wp-integration-toolkit' ); ?></h2>
                     <code><?php echo esc_html( rest_url( 'wp-integration-toolkit/v1/webhooks/inbound' ) ); ?></code>
-                    <p><?php esc_html_e( 'POST JSON and include X-WPITK-Signature (HMAC-SHA256 of the raw request body) and optionally X-WPITK-Event.', 'wp-integration-toolkit' ); ?></p>
+                    <p><?php esc_html_e( 'POST JSON with X-WPITK-Event, X-WPITK-Delivery, X-WPITK-Timestamp, and X-WPITK-Signature. The signature covers all three headers and the exact raw body.', 'wp-integration-toolkit' ); ?></p>
                     <h3><?php esc_html_e( 'Health Check', 'wp-integration-toolkit' ); ?></h3>
                     <code><?php echo esc_html( rest_url( 'wp-integration-toolkit/v1/health' ) ); ?></code>
                 </section>
@@ -203,5 +252,11 @@ class WPITK_Admin {
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error( array( 'message' => __( 'You are not allowed to perform this action.', 'wp-integration-toolkit' ) ), 403 );
         }
+    }
+
+    private function is_allowed_endpoint( $endpoint ) {
+        $scheme = strtolower( (string) wp_parse_url( $endpoint, PHP_URL_SCHEME ) );
+
+        return 'https' === $scheme && false !== wp_http_validate_url( $endpoint );
     }
 }
