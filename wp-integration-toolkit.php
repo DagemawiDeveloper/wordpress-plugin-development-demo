@@ -2,8 +2,8 @@
 /**
  * Plugin Name: WP Integration Toolkit
  * Plugin URI:  https://github.com/DagemawiDeveloper/wordpress-plugin-development-demo
- * Description: A production-style reference plugin for authenticated inbound/outbound webhooks, REST endpoints, AJAX actions, logging, retries, and maintainable WordPress integrations.
- * Version:     1.1.0
+ * Description: A production-style reference plugin for authenticated webhooks, REST endpoints, AJAX actions, Gutenberg blocks, logging, retries, and maintainable WordPress integrations.
+ * Version:     1.2.0
  * Author:      Dagemawi Alemayehu
  * License:     GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'WPITK_VERSION', '1.1.0' );
+define( 'WPITK_VERSION', '1.2.0' );
 define( 'WPITK_FILE', __FILE__ );
 define( 'WPITK_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WPITK_URL', plugin_dir_url( __FILE__ ) );
@@ -28,6 +28,7 @@ require_once WPITK_PATH . 'includes/class-wpitk-logger.php';
 require_once WPITK_PATH . 'includes/class-wpitk-webhook-service.php';
 require_once WPITK_PATH . 'includes/class-wpitk-rest-controller.php';
 require_once WPITK_PATH . 'includes/class-wpitk-admin.php';
+require_once WPITK_PATH . 'includes/class-wpitk-blocks.php';
 require_once WPITK_PATH . 'includes/class-wpitk-plugin.php';
 
 register_activation_hook( __FILE__, array( 'WPITK_Activator', 'activate' ) );
