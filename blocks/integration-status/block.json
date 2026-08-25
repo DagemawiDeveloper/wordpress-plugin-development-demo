@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "wp-integration-toolkit/integration-status",
+  "version": "1.2.0",
+  "title": "Integration Status",
+  "category": "widgets",
+  "icon": "yes-alt",
+  "description": "Display whether WP Integration Toolkit is configured without exposing secrets or endpoint details.",
+  "textdomain": "wp-integration-toolkit",
+  "attributes": {
+    "heading": {
+      "type": "string",
+      "default": "Integration status"
+    },
+    "configuredLabel": {
+      "type": "string",
+      "default": "Integration configured"
+    },
+    "notConfiguredLabel": {
+      "type": "string",
+      "default": "Integration not configured"
+    },
+    "showDescription": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "supports": {
+    "html": false,
+    "anchor": true,
+    "align": ["wide", "full"],
+    "color": {
+      "text": true,
+      "background": true
+    },
+    "spacing": {
+      "margin": true,
+      "padding": true
+    }
+  }
+}

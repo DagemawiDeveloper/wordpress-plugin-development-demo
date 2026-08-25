@@ -12,8 +12,10 @@ class WPITK_Plugin {
         $webhooks = new WPITK_Webhook_Service( $logger, $crypto, $auth );
         $rest     = new WPITK_REST_Controller( $logger, $webhooks );
         $admin    = new WPITK_Admin( $logger, $webhooks, $crypto );
+        $blocks   = new WPITK_Blocks();
 
         add_action( 'rest_api_init', array( $rest, 'register_routes' ) );
+        add_action( 'init', array( $blocks, 'register' ) );
         $admin->register();
 
         add_shortcode( 'wpitk_integration_status', array( $this, 'status_shortcode' ) );
@@ -29,8 +31,7 @@ class WPITK_Plugin {
     }
 
     public function status_shortcode() {
-        $settings = get_option( 'wpitk_settings', array() );
-        $ready    = ! empty( $settings['outbound_url'] ) && ! empty( $settings['webhook_secret'] );
+        $ready = WPITK_Blocks::is_configured();
 
         return sprintf(
             '<span class="wpitk-public-status" data-ready="%1$s">%2$s</span>',

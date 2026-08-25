@@ -22,7 +22,8 @@ The plugin assumes:
 - administrators with `manage_options` are trusted to configure endpoints and secrets;
 - outbound remote services are untrusted;
 - inbound callers are untrusted until canonical HMAC verification succeeds;
-- webhook payloads may contain sensitive business data.
+- webhook payloads may contain sensitive business data;
+- content editors may configure public block labels, but must never receive integration secrets or endpoint details through block rendering.
 
 ## Implemented controls
 
@@ -42,6 +43,8 @@ The plugin assumes:
 - `wp_safe_remote_post()` with redirects disabled and bounded timeout.
 - Inbound payloads are not stored in logs; only size and SHA-256 metadata are retained.
 - Remote response bodies are represented by size and SHA-256 metadata instead of persisted verbatim.
+- The public Gutenberg status block derives only a boolean configured/not-configured state and never renders endpoint or secret values.
+- Editor-provided block labels are sanitized and escaped by the PHP render callback.
 - Optional settings/log cleanup on uninstall.
 
 ## Operational requirements
@@ -58,3 +61,5 @@ The plugin assumes:
 ## Explicit limitations
 
 The repository does not provide a distributed replay ledger across multiple independent WordPress databases, automated secret rotation, edge rate limiting, centralized alerting, or workload-specific data-loss-prevention rules. Those controls depend on deployment architecture and should be added for production use.
+
+The Gutenberg block tests cover registration and server-rendering boundaries in the framework-independent PHPUnit suite. A production block suite should additionally run WordPress integration tests and browser-level editor tests for the target WordPress/VIP runtime.

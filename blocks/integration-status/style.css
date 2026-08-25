@@ -1,0 +1,60 @@
+.wpitk-integration-status {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    align-items: start;
+    padding: 1.25rem;
+    border: 1px solid #dcdcde;
+    border-radius: 0.5rem;
+    background: #fff;
+    color: #1d2327;
+}
+
+.wpitk-integration-status__indicator {
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-top: 0.35rem;
+    border-radius: 999px;
+    background: #b32d2e;
+    box-shadow: 0 0 0 4px rgba(179, 45, 46, 0.12);
+}
+
+.wpitk-integration-status.is-ready .wpitk-integration-status__indicator {
+    background: #008a20;
+    box-shadow: 0 0 0 4px rgba(0, 138, 32, 0.12);
+}
+
+.wpitk-integration-status__eyebrow,
+.wpitk-integration-status__heading,
+.wpitk-integration-status__label,
+.wpitk-integration-status__description {
+    margin-top: 0;
+}
+
+.wpitk-integration-status__eyebrow {
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #646970;
+}
+
+.wpitk-integration-status__heading {
+    margin-bottom: 0.35rem;
+    font-size: 1.15rem;
+}
+
+.wpitk-integration-status__label {
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+}
+
+.wpitk-integration-status__description {
+    margin-bottom: 0;
+    color: #50575e;
+}
+
+.wpitk-integration-status-editor > .components-notice {
+    margin: 0 0 0.75rem;
+}
